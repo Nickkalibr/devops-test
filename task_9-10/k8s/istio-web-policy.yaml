@@ -1,0 +1,22 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: devops-assignment-web-allowlisted-http
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: devops-assignment-web
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            methods: ["POST"]
+            paths: ["/", "/hello"]
+      when:
+        - key: request.headers[test]
+          values: ["Hello"]
+    - to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/health"]

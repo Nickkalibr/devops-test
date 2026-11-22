@@ -1,0 +1,18 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sWebContainerSecurity
+metadata:
+  name: devops-assignment-web-security
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    namespaces: ["default"]
+    labelSelector:
+      matchLabels:
+        app: devops-assignment-web
+  parameters:
+    containerName: web
+    runAsUser: 10001
+    runAsGroup: 10001

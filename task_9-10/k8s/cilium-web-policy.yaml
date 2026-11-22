@@ -1,0 +1,29 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: devops-assignment-web-ingress
+  namespace: default
+spec:
+  description: Allow web requests only through Traefik and health probes from node CNI gateways.
+  endpointSelector:
+    matchLabels:
+      app: devops-assignment-web
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:app.kubernetes.io/name: traefik
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+    - fromCIDR:
+        - 10.42.0.1/32
+        - 10.42.1.1/32
+        - 10.42.2.1/32
+      toPorts:
+        - ports:
+            - port: "15020"
+              protocol: TCP
+            - port: "15021"
+              protocol: TCP

@@ -1,0 +1,164 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8swebcontainersecurity
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sWebContainerSecurity
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            containerName:
+              type: string
+            runAsUser:
+              type: integer
+            runAsGroup:
+              type: integer
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      code:
+        - engine: Rego
+          source:
+            version: "v1"
+            rego: |
+              package k8swebcontainersecurity
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                not input.review.object.spec.securityContext.runAsNonRoot
+                msg := "web pod must set runAsNonRoot: true"
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                not (input.review.object.spec.securityContext.runAsUser == input.parameters.runAsUser)
+                msg := sprintf("web pod must run as UID %v", [input.parameters.runAsUser])
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                not (input.review.object.spec.securityContext.runAsGroup == input.parameters.runAsGroup)
+                msg := sprintf("web pod must run as GID %v", [input.parameters.runAsGroup])
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                not (input.review.object.spec.securityContext.seccompProfile.type == "RuntimeDefault")
+                msg := "web pod must use the RuntimeDefault seccomp profile"
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                some container in input.review.object.spec.containers
+                container.name == input.parameters.containerName
+                not container.securityContext.readOnlyRootFilesystem
+                msg := "web container must use a read-only root filesystem"
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                some container in input.review.object.spec.containers
+                container.name == input.parameters.containerName
+                not (container.securityContext.allowPrivilegeEscalation == false)
+                msg := "web container must set allowPrivilegeEscalation: false"
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                some container in input.review.object.spec.containers
+                container.name == input.parameters.containerName
+                not container.securityContext.runAsNonRoot
+                msg := "web container must set runAsNonRoot: true"
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                some container in input.review.object.spec.containers
+                container.name == input.parameters.containerName
+                not (container.securityContext.runAsUser == input.parameters.runAsUser)
+                msg := sprintf("web container must run as UID %v", [input.parameters.runAsUser])
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                some container in input.review.object.spec.containers
+                container.name == input.parameters.containerName
+                not (container.securityContext.runAsGroup == input.parameters.runAsGroup)
+                msg := sprintf("web container must run as GID %v", [input.parameters.runAsGroup])
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                some container in input.review.object.spec.containers
+                container.name == input.parameters.containerName
+                not ("ALL" in container.securityContext.capabilities.drop)
+                msg := "web container must drop all Linux capabilities"
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                some container in input.review.object.spec.containers
+                container.name == input.parameters.containerName
+                not ("NET_RAW" in container.securityContext.capabilities.add)
+                msg := "web container must add NET_RAW for its ping health check"
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                some container in input.review.object.spec.containers
+                container.name == input.parameters.containerName
+                some capability in container.securityContext.capabilities.add
+                capability != "NET_RAW"
+                msg := "web container may add only NET_RAW for its ping health check"
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                some container in input.review.object.spec.containers
+                container.name == input.parameters.containerName
+                not container.resources.requests.cpu
+                msg := "web container must set CPU and memory requests"
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                some container in input.review.object.spec.containers
+                container.name == input.parameters.containerName
+                not container.resources.requests.memory
+                msg := "web container must set CPU and memory requests"
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                some container in input.review.object.spec.containers
+                container.name == input.parameters.containerName
+                not container.resources.limits.cpu
+                msg := "web container must set CPU and memory limits"
+              }
+
+              violation contains {"msg": msg} if {
+                input.review.object.metadata.namespace == "default"
+                input.review.object.metadata.labels.app == "devops-assignment-web"
+                some container in input.review.object.spec.containers
+                container.name == input.parameters.containerName
+                not container.resources.limits.memory
+                msg := "web container must set CPU and memory limits"
+              }

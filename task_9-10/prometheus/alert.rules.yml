@@ -1,0 +1,11 @@
+groups:
+  - name: webapp
+    rules:
+      - alert: WebAppDown
+        expr: up{job="webapp"} == 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: Web application scrape is failing
+          description: Prometheus has been unable to scrape the web application for 30 seconds.

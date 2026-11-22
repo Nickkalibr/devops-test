@@ -1,0 +1,14 @@
+replicas: 1
+auditInterval: 300
+disableAudit: true
+controllerManager:
+  disableGenerateOperation: false
+  nodeSelector:
+    kubernetes.io/hostname: task9-k8s2
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi

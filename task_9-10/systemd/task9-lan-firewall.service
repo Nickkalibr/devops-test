@@ -1,0 +1,13 @@
+[Unit]
+Description=Restrict TASK9-K8S1 bridged LAN interface to HTTP/HTTPS ingress
+Wants=network-online.target
+After=network-online.target
+Before=k3s.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/task9-lan-firewall
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
